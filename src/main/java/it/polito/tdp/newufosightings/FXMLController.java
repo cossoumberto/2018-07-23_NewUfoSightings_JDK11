@@ -4,6 +4,7 @@ import java.net.URL;
 import java.util.ResourceBundle;
 
 import it.polito.tdp.newufosightings.model.Model;
+import it.polito.tdp.newufosightings.model.State;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -16,6 +17,7 @@ import javafx.scene.control.TextField;
 public class FXMLController {
 	
 	private Model model;
+	private Integer anno;
 
     @FXML
     private ResourceBundle resources;
@@ -33,7 +35,7 @@ public class FXMLController {
     private Button btnSelezionaAnno;
 
     @FXML
-    private ComboBox<?> cmbBoxForma;
+    private ComboBox<String> cmbBoxForma;
 
     @FXML
     private Button btnCreaGrafo;
@@ -49,17 +51,57 @@ public class FXMLController {
 
     @FXML
     void doCreaGrafo(ActionEvent event) {
-
+    	if(cmbBoxForma.getValue()!=null) {
+    		model.creaGrafo(anno, cmbBoxForma.getValue());
+    		txtResult.clear();
+    		for(State s : model.getGrafo().vertexSet())
+    			if(model.sommaPesiArchi(s)>0)
+    				txtResult.appendText(s.toString() + "\nSomma pesi archi: " + model.sommaPesiArchi(s) + "\n");
+    	}
+    	else 
+    		txtResult.setText("Selezionare una forma");
     }
 
     @FXML
     void doSelezionaAnno(ActionEvent event) {
-
+    	cmbBoxForma.getItems().clear();
+    	String annoString = txtAnno.getText().trim();
+    	try {
+    		if(annoString.length()!=4)
+    			throw new NumberFormatException();
+    		anno = Integer.parseInt(annoString);
+    		if(model.getFormeAnno(anno).size()>0) {
+    			cmbBoxForma.getItems().addAll(model.getFormeAnno(anno));
+    			txtResult.setText("Forme inserite");
+    		} 
+    		else 
+    			txtResult.setText("Nessun avvistamente nell'anno inserito");
+    	} catch (NumberFormatException e) {
+    		e.printStackTrace();
+    		txtResult.setText("Inserito anno non valido");
+    	}
     }
 
     @FXML
     void doSimula(ActionEvent event) {
-
+    	try {
+    		Integer t1 = Integer.parseInt(txtT1.getText());
+    		Integer alfa = Integer.parseInt(txtAlfa.getText());
+    		if(alfa<0 || alfa>100 || t1<0 || t1>365)
+    			throw new NumberFormatException();
+    		else {
+    			if(model.getGrafo()!=null) {
+    				model.simula(t1, alfa);
+    				txtResult.clear();
+    				for(State s : model.getGrafo().vertexSet())
+    					txtResult.appendText(s.toString() + " " + s.getDefconReale() + /*" (" + s.getDefcon() + ")" + */ "\n");
+    			} else 
+    				txtResult.setText("Crea il grafo");
+    		}
+    	} catch (NumberFormatException e) {
+    		e.printStackTrace();
+    		txtResult.setText("Inserimento di alfa e t1 non valido");
+    	}
     }
 
     @FXML
